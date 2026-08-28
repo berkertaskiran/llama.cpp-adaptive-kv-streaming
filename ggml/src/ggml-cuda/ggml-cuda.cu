@@ -1507,9 +1507,11 @@ static ggml_backend_buffer_t ggml_backend_cuda_kv_stream_buffer_alloc(
     ggml_cuda_set_device(runtime->device);
 
     void * host_data = nullptr;
+    // NOTE: WriteCombined mapped pages are not GPU-writable on Windows/WDDM,
+    // and this buffer receives direct kernel writes, so WC must not be set.
     const cudaError_t error = cudaHostAlloc(
         &host_data, size,
-        cudaHostAllocMapped | cudaHostAllocWriteCombined);
+        cudaHostAllocMapped);
     if (error != cudaSuccess) {
         (void) cudaGetLastError();
         GGML_LOG_ERROR("%s: allocating %.2f MiB pinned KV storage failed: %s\n",
