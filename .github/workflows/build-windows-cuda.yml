@@ -1,0 +1,50 @@
+name: Build Windows CUDA binary
+
+on:
+  workflow_dispatch:   # lets you trigger it manually from the Actions tab
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install CUDA Toolkit
+        uses: Jimver/cuda-toolkit@v0.2.19
+        id: cuda-toolkit
+        with:
+          cuda: '12.4.1'
+          method: 'network'
+          sub-packages: '["nvcc", "cudart", "cublas", "cublas_dev", "curand", "curand_dev"]'
+
+      - name: Configure CMake
+        run: >
+          cmake -B build -G "Visual Studio 17 2022" -A x64
+          -DGGML_CUDA=ON
+          -DCMAKE_CUDA_ARCHITECTURES=89
+          -DBUILD_SHARED_LIBS=OFF
+          -DCMAKE_BUILD_TYPE=Release
+          -DGGML_NATIVE=OFF
+          -DGGML_AVX512=OFF
+
+      - name: Build
+        run: cmake --build build --config Release --target llama-server -j 4
+
+      - name: Collect binaries
+        run: |
+          mkdir dist
+          copy build\bin\Release\llama-server.exe dist\
+          copy build\bin\Release\*.dll dist\ 2>nul || echo "no extra dlls, continuing"
+        shell: cmd
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: llama-server-windows-cuda
+          path: dist/
