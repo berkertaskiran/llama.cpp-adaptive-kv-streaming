@@ -16,10 +16,10 @@ jobs:
           submodules: recursive
 
       - name: Install CUDA Toolkit
-        uses: Jimver/cuda-toolkit@v0.2.19
+        uses: Jimver/cuda-toolkit@v0.2.36
         id: cuda-toolkit
         with:
-          cuda: '13.0.0'
+          cuda: '13.0.2'
           method: 'network'
           sub-packages: '["nvcc", "cudart", "cublas", "cublas_dev", "curand", "curand_dev"]'
 
