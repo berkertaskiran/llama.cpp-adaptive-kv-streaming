@@ -15,13 +15,12 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install CUDA Toolkit
-        uses: Jimver/cuda-toolkit@v0.2.36
-        id: cuda-toolkit
-        with:
-          cuda: '13.2.0'
-          method: 'local'
-          sub-packages: '["nvcc", "cudart", "cublas", "cublas_dev", "curand", "curand_dev"]'
+      - name: Install CUDA Toolkit via Chocolatey
+        shell: powershell
+        run: |
+          choco install cuda --version=13.2.0 -y --no-progress
+          echo "CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.2" >> $env:GITHUB_ENV
+          echo "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.2\bin" >> $env:GITHUB_PATH
 
       - name: Set up MSVC dev environment
         uses: ilammy/msvc-dev-cmd@v1
