@@ -19,13 +19,25 @@ jobs:
         uses: Jimver/cuda-toolkit@v0.2.19
         id: cuda-toolkit
         with:
-          cuda: '12.4.1'
+          cuda: '13.0.0'
           method: 'network'
           sub-packages: '["nvcc", "cudart", "cublas", "cublas_dev", "curand", "curand_dev"]'
 
+      - name: Set up MSVC dev environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Install Ninja
+        run: choco install ninja -y
+
       - name: Configure CMake
+        shell: cmd
         run: >
-          cmake -B build -G "Visual Studio 17 2022" -A x64
+          cmake -B build -G "Ninja"
+          -DCMAKE_C_COMPILER=cl
+          -DCMAKE_CXX_COMPILER=cl
+          -DCMAKE_CUDA_FLAGS="-allow-unsupported-compiler"
           -DGGML_CUDA=ON
           -DCMAKE_CUDA_ARCHITECTURES=89
           -DBUILD_SHARED_LIBS=OFF
@@ -34,6 +46,7 @@ jobs:
           -DGGML_AVX512=OFF
 
       - name: Build
+        shell: cmd
         run: cmake --build build --config Release --target llama-server -j 4
 
       - name: Collect binaries
