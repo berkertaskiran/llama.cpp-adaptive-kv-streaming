@@ -58,11 +58,12 @@ jobs:
           } else {
             Write-Host "No local build DLLs - fully static build."
           }
-          $cudaBin = "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.2\bin"
-          Copy-Item "$cudaBin\cudart64_13.dll" dist\ -ErrorAction SilentlyContinue
-          Copy-Item "$cudaBin\cublas64_13.dll" dist\ -ErrorAction SilentlyContinue
-          Copy-Item "$cudaBin\cublasLt64_13.dll" dist\ -ErrorAction SilentlyContinue
-          Copy-Item "$cudaBin\curand64_13.dll" dist\ -ErrorAction SilentlyContinue
+          $cudaBin = "$env:CUDA_PATH\bin"
+          Write-Host "Looking for CUDA DLLs in: $cudaBin"
+          Get-ChildItem "$cudaBin\*.dll" | Where-Object { $_.Name -match "cudart64|cublas64|cublasLt64|curand64" } | ForEach-Object {
+            Copy-Item $_.FullName dist\
+            Write-Host "Copied: $($_.Name)"
+          }
           $opensslBin = "C:\Program Files\OpenSSL\bin"
           Copy-Item "$opensslBin\libssl-3-x64.dll" dist\ -ErrorAction SilentlyContinue
           Copy-Item "$opensslBin\libcrypto-3-x64.dll" dist\ -ErrorAction SilentlyContinue
