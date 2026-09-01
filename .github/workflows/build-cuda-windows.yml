@@ -19,7 +19,7 @@ jobs:
         uses: Jimver/cuda-toolkit@v0.2.19
         id: cuda-toolkit
         with:
-          cuda: '12.4.1'
+          cuda: '13.0.0'
           method: 'network'
           sub-packages: '["nvcc", "cudart", "cublas", "cublas_dev", "curand", "curand_dev"]'
 
@@ -37,6 +37,7 @@ jobs:
           cmake -B build -G "Ninja"
           -DCMAKE_C_COMPILER=cl
           -DCMAKE_CXX_COMPILER=cl
+          -DCMAKE_CUDA_FLAGS="-allow-unsupported-compiler"
           -DGGML_CUDA=ON
           -DCMAKE_CUDA_ARCHITECTURES=89
           -DBUILD_SHARED_LIBS=OFF
