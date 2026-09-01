@@ -20,7 +20,7 @@ jobs:
         id: cuda-toolkit
         with:
           cuda: '13.2.0'
-          method: 'network'
+          method: 'local'
           sub-packages: '["nvcc", "cudart", "cublas", "cublas_dev", "curand", "curand_dev"]'
 
       - name: Set up MSVC dev environment
