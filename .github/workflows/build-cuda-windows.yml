@@ -59,8 +59,11 @@ jobs:
             Write-Host "No local build DLLs - fully static build."
           }
           $cudaBin = "$env:CUDA_PATH\bin"
-          Write-Host "Looking for CUDA DLLs in: $cudaBin"
-          Get-ChildItem "$cudaBin\*.dll" | Where-Object { $_.Name -match "cudart64|cublas64|cublasLt64|curand64" } | ForEach-Object {
+          Write-Host "=== Full contents of $cudaBin ==="
+          Get-ChildItem $cudaBin -ErrorAction SilentlyContinue | Select-Object Name
+          Write-Host "=== Full contents of $env:CUDA_PATH (recursive, dll only) ==="
+          Get-ChildItem "$env:CUDA_PATH" -Recurse -Filter *.dll -ErrorAction SilentlyContinue | Select-Object FullName
+          Get-ChildItem "$cudaBin\*.dll" -ErrorAction SilentlyContinue | Where-Object { $_.Name -match "cudart64|cublas64|cublasLt64|curand64" } | ForEach-Object {
             Copy-Item $_.FullName dist\
             Write-Host "Copied: $($_.Name)"
           }
