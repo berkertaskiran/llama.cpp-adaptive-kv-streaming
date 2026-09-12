@@ -1,0 +1,60 @@
+name: Build KV Arena Windows CUDA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+
+    steps:
+      - name: Get kv-stream-phase-arena branch
+        uses: actions/checkout@v6
+        with:
+          repository: RaymondHuang210129/llama.cpp-adaptive-kv-streaming
+          ref: feature/kv-stream-phase-arena
+
+      - name: Install CUDA 12.4
+        uses: ./.github/actions/windows-setup-cuda
+        with:
+          cuda_version: '12.4'
+          cuda_arch: x64
+
+      - name: Install Ninja
+        run: choco install ninja -y
+
+      - name: Build llama-server for RTX 40 series
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
+
+          cmake -S . -B build -G "Ninja Multi-Config" ^
+            -DGGML_CUDA=ON ^
+            -DGGML_CUDA_FA_ALL_QUANTS=ON ^
+            -DGGML_CUDA_CUB_3DOT2=ON ^
+            -DCMAKE_CUDA_ARCHITECTURES=89 ^
+            -DGGML_NATIVE=OFF ^
+            -DLLAMA_BUILD_SERVER=ON ^
+            -DLLAMA_BUILD_TESTS=OFF ^
+            -DLLAMA_BUILD_EXAMPLES=OFF
+
+          cmake --build build --config Release --target llama-server -j %NUMBER_OF_PROCESSORS%
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force package
+
+          Copy-Item ".\build\bin\Release\*" ".\package\" -Force
+
+          Copy-Item "$env:CUDA_PATH\bin\cudart64_*.dll" ".\package\" -Force
+          Copy-Item "$env:CUDA_PATH\bin\cublas64_*.dll" ".\package\" -Force
+          Copy-Item "$env:CUDA_PATH\bin\cublasLt64_*.dll" ".\package\" -Force
+
+          Compress-Archive -Path ".\package\*" -DestinationPath "llama-kv-arena-win-cuda124.zip"
+
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v6
+        with:
+          name: llama-kv-arena-win-cuda124
+          path: llama-kv-arena-win-cuda124.zip
